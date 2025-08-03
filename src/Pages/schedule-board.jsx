@@ -263,4 +263,4 @@ const ScheduleBoardPage = () => {
   );
 };
 
-export default ScheduleBoard;
+export default ScheduleBoardPage;

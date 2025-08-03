@@ -7,7 +7,7 @@ import dashboard from "../assets/dashboard.jpeg";
 import ScheduleBoard from "../assets/ScheduleBoard.jpeg";
 import HRmanagement from "../assets/HR management.jpeg";
 import TimeTracking from "../assets/TimeTracking.jpeg";
-import internalCommunications from "../assets/internalCommunications.png";
+import internalCommunications from "../assets/internalcommunications.png";
 import employeescheduling from "../assets/employeescheduling.png";
 import Dailyoperation from "../assets/Dailyoperations.jpeg";
 import payrollentries from "../assets/payrollentries.jpeg";

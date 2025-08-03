@@ -254,7 +254,7 @@ const ScheduleBoardPage = () => {
             </div>
             <div className="flex items-start">
               <span className="font-medium mr-1">Open Shifts:</span>
-              Unassigned tasks appear in the "Open Shifts" row at the bottom of the schedule.
+              Unassigned tasks appear in the "Open Shifts\" row at the bottom of the schedule.
             </div>
           </div>
         </div>

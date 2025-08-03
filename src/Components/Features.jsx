@@ -9,7 +9,7 @@ import HRmanagement from "../assets/HR management.jpeg";
 import TimeTracking from "../assets/TimeTracking.jpeg";
 import internalCommunications from "../assets/internalcommunications.png";
 import employeescheduling from "../assets/employeescheduling.png";
-import Dailyoperation from "../assets/Dailyoperations.jpeg";
+import Dailyoperation from "../assets/DailyOperations.jpeg";
 import payrollentries from "../assets/payrollentries.jpeg";
 import AI from "../assets/AIHRrecruitment.jpeg";
 export default function Feature() {

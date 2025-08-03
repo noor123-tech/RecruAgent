@@ -11,7 +11,7 @@ import internalCommunications from "../assets/internalCommunications.png";
 import employeescheduling from "../assets/employeescheduling.png";
 import Dailyoperation from "../assets/Dailyoperations.jpeg";
 import payrollentries from "../assets/payrollentries.jpeg";
-
+import AI from "../assets/AIHRrecruitment.jpeg";
 export default function Feature() {
   const features = [
     {
@@ -23,7 +23,7 @@ export default function Feature() {
         "Bias reduction through objective scoring",
         "Human-in-the-loop for final decisions"
       ],
-      image: dashboard,
+      image: AI,
       icon: <Zap className="text-orange-500" size={24} />,
       highlight: true
     },

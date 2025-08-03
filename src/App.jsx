@@ -9,6 +9,12 @@ import Feature from "./Components/Features";
 import Login from "./Pages/Login";
 import Dashboard from "./Pages/Dashboard";
 import ScheduleBoard from "./Pages/schedule-board";
+import TimeTracking from "./Pages/TimeTracking";
+import DailyOperations from "./Pages/DailyOperations";
+import InternalCommunication from "./Pages/InternalCommunication";
+import PayrollManagement from "./Pages/PayrollManagement";
+import HRManagement from "./Pages/HRManagement";
+import AIRecruitment from "./Pages/AIRecruitment";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -37,6 +43,13 @@ function App() {
                <ScheduleBoard/>
             </>
           } />
+          
+          <Route path="/time-tracking" element={<TimeTracking />} />
+          <Route path="/daily-operations" element={<DailyOperations />} />
+          <Route path="/internal-communication" element={<InternalCommunication />} />
+          <Route path="/payroll" element={<PayrollManagement />} />
+          <Route path="/hr" element={<HRManagement />} />
+          <Route path="/ai-recruitment" element={<AIRecruitment />} />
 
           <Route path="/login" element={
             isLoggedIn ? (

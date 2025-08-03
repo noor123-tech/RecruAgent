@@ -208,7 +208,7 @@ export default function Feature() {
       </div>
 
       {/* Floating and Grid Animations */}
-      <style jsx global>{`
+      <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0) translateX(0); }
           50% { transform: translateY(-25px) translateX(15px); }

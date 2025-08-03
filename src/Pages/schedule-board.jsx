@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Download, Plus, Settings, RefreshCw, Calendar } from 'lucide-react';
+import React, { useState, useRef, useCallback } from 'react';
+import { ArrowLeft, Download, Plus, Settings, RefreshCw, Calendar, Clock, Users, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-// Enhanced mock data with more realistic schedule
+// Enhanced mock data with realistic schedule extending beyond 5 PM
 const mockScheduleData = {
   date: new Date().toISOString().split('T')[0],
   workers: [
@@ -64,7 +64,7 @@ const mockScheduleData = {
           id: '203', 
           name: 'Follow-up Calls', 
           startTime: '15:00', 
-          endTime: '16:30', 
+          endTime: '17:30', 
           priority: 'Medium',
           color: 'bg-green-100 border-green-400 text-green-800'
         }
@@ -88,7 +88,7 @@ const mockScheduleData = {
           id: '302', 
           name: 'Documentation', 
           startTime: '13:00', 
-          endTime: '14:30', 
+          endTime: '16:30', 
           priority: 'Low',
           color: 'bg-pink-100 border-pink-400 text-pink-800'
         }
@@ -112,7 +112,7 @@ const mockScheduleData = {
           id: '402', 
           name: 'Security Audit', 
           startTime: '14:00', 
-          endTime: '16:00', 
+          endTime: '18:00', 
           priority: 'High',
           color: 'bg-red-100 border-red-400 text-red-800'
         }
@@ -136,7 +136,7 @@ const mockScheduleData = {
           id: '502', 
           name: 'Campaign Analysis', 
           startTime: '13:30', 
-          endTime: '15:00', 
+          endTime: '17:00', 
           priority: 'Medium',
           color: 'bg-yellow-100 border-yellow-400 text-yellow-800'
         }
@@ -146,80 +146,105 @@ const mockScheduleData = {
   openShifts: [
     { 
       id: '601', 
-      name: 'Open Shift', 
-      startTime: '10:00', 
-      endTime: '11:00', 
+      name: 'Evening Shift', 
+      startTime: '17:00', 
+      endTime: '19:00', 
       priority: 'Medium',
+      color: 'bg-gray-100 border-gray-400 text-gray-800'
+    },
+    { 
+      id: '602', 
+      name: 'Night Support', 
+      startTime: '20:00', 
+      endTime: '22:00', 
+      priority: 'High',
       color: 'bg-gray-100 border-gray-400 text-gray-800'
     }
   ]
 };
 
 const TimeSlot = ({ hour, isHalfHour = false }) => {
-  const displayHour = hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`;
-  const halfHourDisplay = hour < 12 ? `${hour}:30 AM` : hour === 12 ? '12:30 PM' : `${hour - 12}:30 PM`;
+  const formatTime = (h) => {
+    if (h < 12) return `${h} AM`;
+    if (h === 12) return '12 PM';
+    return `${h - 12} PM`;
+  };
+  
+  const displayTime = isHalfHour ? 
+    (hour < 12 ? `${hour}:30 AM` : hour === 12 ? '12:30 PM' : `${hour - 12}:30 PM`) :
+    formatTime(hour);
   
   return (
-    <div className="text-xs text-gray-500 text-center border-r border-gray-200 px-2 py-1 min-w-[60px]">
-      {isHalfHour ? halfHourDisplay : displayHour}
+    <div className="text-xs text-gray-500 text-center border-r border-gray-200 px-3 py-2 min-w-[80px] bg-gray-50">
+      {displayTime}
     </div>
   );
 };
 
-const TaskBlock = ({ task, startHour, onTaskClick }) => {
+const TaskBlock = ({ task, startHour, onTaskClick, onDragStart, isDragging }) => {
   const taskStartHour = parseInt(task.startTime.split(':')[0]);
   const taskStartMinute = parseInt(task.startTime.split(':')[1]);
   const taskEndHour = parseInt(task.endTime.split(':')[0]);
   const taskEndMinute = parseInt(task.endTime.split(':')[1]);
   
-  const startPosition = ((taskStartHour - startHour) * 120) + (taskStartMinute * 2);
+  const startPosition = ((taskStartHour - startHour) * 80) + (taskStartMinute * 80 / 60);
   const duration = ((taskEndHour - taskStartHour) * 60) + (taskEndMinute - taskStartMinute);
-  const width = duration * 2;
+  const width = duration * 80 / 60;
   
   return (
     <div
-      className={`absolute h-8 rounded border-l-4 cursor-pointer hover:shadow-md transition-shadow ${task.color}`}
+      className={`absolute h-12 rounded-lg border-l-4 cursor-move hover:shadow-lg transition-all duration-200 ${task.color} ${isDragging ? 'opacity-50 z-50' : 'z-10'}`}
       style={{
         left: `${startPosition}px`,
-        width: `${width}px`,
-        top: '4px'
+        width: `${Math.max(width, 60)}px`,
+        top: '8px'
       }}
+      draggable
+      onDragStart={(e) => onDragStart(e, task)}
       onClick={() => onTaskClick(task)}
     >
-      <div className="px-2 py-1 text-xs font-medium truncate">
-        {task.name}
-      </div>
-      <div className="px-2 text-xs opacity-75">
-        {task.startTime} - {task.endTime}
+      <div className="px-3 py-1 h-full flex flex-col justify-center">
+        <div className="text-xs font-semibold truncate">
+          {task.name}
+        </div>
+        <div className="text-xs opacity-75">
+          {task.startTime} - {task.endTime}
+        </div>
       </div>
     </div>
   );
 };
 
-const WorkerRow = ({ worker, startHour, endHour, onTaskClick }) => {
+const WorkerRow = ({ worker, startHour, endHour, onTaskClick, onDragStart, onDrop, onDragOver, isDragging }) => {
   return (
-    <div className="flex border-b border-gray-200 hover:bg-gray-50">
-      <div className="w-48 p-4 border-r border-gray-200 bg-white sticky left-0 z-10">
+    <div 
+      className="flex border-b border-gray-200 hover:bg-gray-50 transition-colors"
+      onDrop={(e) => onDrop(e, worker.id)}
+      onDragOver={onDragOver}
+    >
+      <div className="w-56 p-4 border-r border-gray-200 bg-white sticky left-0 z-20">
         <div className="flex items-center space-x-3">
           <img 
             src={worker.avatar} 
             alt={worker.name} 
-            className="w-8 h-8 rounded-full object-cover"
+            className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
           />
           <div>
-            <div className="font-medium text-gray-900 text-sm">{worker.name}</div>
+            <div className="font-semibold text-gray-900 text-sm">{worker.name}</div>
             <div className="text-xs text-gray-500">{worker.role}</div>
           </div>
         </div>
       </div>
       
-      <div className="flex-1 relative h-16 bg-white">
+      <div className="flex-1 relative h-20 bg-white min-w-0">
         {worker.tasks.map(task => (
           <TaskBlock 
             key={task.id} 
             task={task} 
             startHour={startHour}
             onTaskClick={onTaskClick}
+            onDragStart={onDragStart}
+            isDragging={isDragging}
           />
         ))}
       </div>
@@ -227,28 +252,34 @@ const WorkerRow = ({ worker, startHour, endHour, onTaskClick }) => {
   );
 };
 
-const OpenShiftsRow = ({ openShifts, startHour, onTaskClick }) => {
+const OpenShiftsRow = ({ openShifts, startHour, onTaskClick, onDragStart, onDrop, onDragOver, isDragging }) => {
   return (
-    <div className="flex border-b border-gray-200 bg-orange-50">
-      <div className="w-48 p-4 border-r border-gray-200 bg-orange-100 sticky left-0 z-10">
+    <div 
+      className="flex border-b-2 border-orange-200 bg-orange-50"
+      onDrop={(e) => onDrop(e, 'open')}
+      onDragOver={onDragOver}
+    >
+      <div className="w-56 p-4 border-r border-gray-200 bg-orange-100 sticky left-0 z-20">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-full bg-orange-200 flex items-center justify-center">
-            <Plus className="w-4 h-4 text-orange-600" />
+          <div className="w-10 h-10 rounded-full bg-orange-200 flex items-center justify-center">
+            <Plus className="w-5 h-5 text-orange-600" />
           </div>
           <div>
-            <div className="font-medium text-orange-900 text-sm">Open</div>
-            <div className="text-xs text-orange-600">Available Shifts</div>
+            <div className="font-semibold text-orange-900 text-sm">Open Shifts</div>
+            <div className="text-xs text-orange-600">Available</div>
           </div>
         </div>
       </div>
       
-      <div className="flex-1 relative h-16 bg-orange-50">
+      <div className="flex-1 relative h-20 bg-orange-50 min-w-0">
         {openShifts.map(task => (
           <TaskBlock 
             key={task.id} 
             task={task} 
             startHour={startHour}
             onTaskClick={onTaskClick}
+            onDragStart={onDragStart}
+            isDragging={isDragging}
           />
         ))}
       </div>
@@ -256,21 +287,49 @@ const OpenShiftsRow = ({ openShifts, startHour, onTaskClick }) => {
   );
 };
 
-const ScheduleBoard = ({ data, startHour, endHour, onScheduleUpdate, onTaskClick }) => {
+const ScheduleBoard = ({ data, startHour, endHour, onScheduleUpdate, onTaskClick, onTaskMove }) => {
+  const [draggedTask, setDraggedTask] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+
   const timeSlots = [];
   for (let hour = startHour; hour <= endHour; hour++) {
     timeSlots.push(hour);
   }
 
+  const handleDragStart = useCallback((e, task) => {
+    setDraggedTask(task);
+    setIsDragging(true);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', task.id);
+  }, []);
+
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  const handleDrop = useCallback((e, targetWorkerId) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (draggedTask && onTaskMove) {
+      onTaskMove(draggedTask, targetWorkerId);
+    }
+    setDraggedTask(null);
+  }, [draggedTask, onTaskMove]);
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <div className="overflow-x-auto">
         {/* Header with time slots */}
-        <div className="flex border-b border-gray-200">
-          <div className="w-48 p-4 border-r border-gray-200 bg-gray-50 sticky left-0 z-20">
-            <div className="font-medium text-gray-900">Workers</div>
+        <div className="flex border-b-2 border-gray-300">
+          <div className="w-56 p-4 border-r border-gray-200 bg-gray-100 sticky left-0 z-30">
+            <div className="font-semibold text-gray-900 flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Workers
+            </div>
           </div>
-          <div className="flex bg-gray-50">
+          <div className="flex bg-gray-100 min-w-0">
             {timeSlots.map(hour => (
               <TimeSlot key={hour} hour={hour} />
             ))}
@@ -285,6 +344,10 @@ const ScheduleBoard = ({ data, startHour, endHour, onScheduleUpdate, onTaskClick
             startHour={startHour}
             endHour={endHour}
             onTaskClick={onTaskClick}
+            onDragStart={handleDragStart}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            isDragging={isDragging}
           />
         ))}
 
@@ -293,54 +356,103 @@ const ScheduleBoard = ({ data, startHour, endHour, onScheduleUpdate, onTaskClick
           openShifts={data.openShifts}
           startHour={startHour}
           onTaskClick={onTaskClick}
+          onDragStart={handleDragStart}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          isDragging={isDragging}
         />
       </div>
     </div>
   );
 };
 
-const TaskModal = ({ task, isOpen, onClose }) => {
+const TaskModal = ({ task, isOpen, onClose, onSave }) => {
+  const [editedTask, setEditedTask] = useState(task || {});
+
+  React.useEffect(() => {
+    setEditedTask(task || {});
+  }, [task]);
+
   if (!isOpen || !task) return null;
+
+  const handleSave = () => {
+    if (onSave) {
+      onSave(editedTask);
+    }
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <div className="flex justify-between items-start mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">{task.name}</h3>
+      <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+        <div className="flex justify-between items-start mb-6">
+          <h3 className="text-xl font-bold text-gray-900">{task.name}</h3>
           <button 
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
           >
             ×
           </button>
         </div>
         
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div>
-            <span className="text-sm font-medium text-gray-500">Time:</span>
-            <span className="ml-2 text-sm text-gray-900">{task.startTime} - {task.endTime}</span>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Task Name</label>
+            <input
+              type="text"
+              value={editedTask.name || ''}
+              onChange={(e) => setEditedTask({...editedTask, name: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
           </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+              <input
+                type="time"
+                value={editedTask.startTime || ''}
+                onChange={(e) => setEditedTask({...editedTask, startTime: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+              <input
+                type="time"
+                value={editedTask.endTime || ''}
+                onChange={(e) => setEditedTask({...editedTask, endTime: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+          
           <div>
-            <span className="text-sm font-medium text-gray-500">Priority:</span>
-            <span className={`ml-2 text-sm px-2 py-1 rounded ${
-              task.priority === 'High' ? 'bg-red-100 text-red-800' :
-              task.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-              'bg-green-100 text-green-800'
-            }`}>
-              {task.priority}
-            </span>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+            <select
+              value={editedTask.priority || 'Medium'}
+              onChange={(e) => setEditedTask({...editedTask, priority: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+            </select>
           </div>
         </div>
         
-        <div className="mt-6 flex justify-end space-x-3">
+        <div className="mt-8 flex justify-end space-x-3">
           <button 
             onClick={onClose}
-            className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            Close
+            Cancel
           </button>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-            Edit Task
+          <button 
+            onClick={handleSave}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Save Changes
           </button>
         </div>
       </div>
@@ -370,6 +482,48 @@ const ScheduleBoardPage = () => {
   const handleTaskClick = (task) => {
     setSelectedTask(task);
     setIsTaskModalOpen(true);
+  };
+
+  const handleTaskMove = (task, targetWorkerId) => {
+    const newData = { ...scheduleData };
+    
+    // Remove task from current location
+    newData.workers = newData.workers.map(worker => ({
+      ...worker,
+      tasks: worker.tasks.filter(t => t.id !== task.id)
+    }));
+    newData.openShifts = newData.openShifts.filter(t => t.id !== task.id);
+    
+    // Add task to new location
+    if (targetWorkerId === 'open') {
+      newData.openShifts.push(task);
+    } else {
+      const targetWorker = newData.workers.find(w => w.id === targetWorkerId);
+      if (targetWorker) {
+        targetWorker.tasks.push(task);
+      }
+    }
+    
+    setScheduleData(newData);
+  };
+
+  const handleTaskSave = (updatedTask) => {
+    const newData = { ...scheduleData };
+    
+    // Update task in workers
+    newData.workers = newData.workers.map(worker => ({
+      ...worker,
+      tasks: worker.tasks.map(task => 
+        task.id === updatedTask.id ? updatedTask : task
+      )
+    }));
+    
+    // Update task in open shifts
+    newData.openShifts = newData.openShifts.map(task => 
+      task.id === updatedTask.id ? updatedTask : task
+    );
+    
+    setScheduleData(newData);
   };
 
   const exportSchedule = () => {
@@ -408,109 +562,130 @@ const ScheduleBoardPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-8 gap-4">
-          <div className="flex items-center space-x-4">
-            <Link
-              to="/dashboard"
-              className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5 mr-2" />
-              Back to Dashboard
-            </Link>
-            <div className="h-6 border-l border-gray-300 hidden lg:block" />
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Schedule Board</h1>
-              <p className="text-gray-600">Manage employee schedules and task assignments</p>
+        {/* Header with proper margin */}
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex items-center space-x-4">
+              <Link
+                to="/dashboard"
+                className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <ArrowLeft className="h-5 w-5 mr-2" />
+                Back to Dashboard
+              </Link>
+              <div className="h-6 border-l border-gray-300 hidden lg:block" />
+              <div>
+                <h1 className="text-4xl font-bold text-gray-900 mb-2">Schedule Board</h1>
+                <p className="text-lg text-gray-600">Manage employee schedules and task assignments</p>
+              </div>
             </div>
-          </div>
 
-          <div className="flex flex-wrap gap-3">
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => handleDateChange(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <button
-              onClick={exportSchedule}
-              className="flex items-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </button>
-            <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Task
-            </button>
-            <button className="flex items-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </button>
-            <button className="flex items-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => handleDateChange(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <button
+                onClick={exportSchedule}
+                className="flex items-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </button>
+              <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Task
+              </button>
+              <button className="flex items-center px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="text-sm font-medium text-gray-500">Total Workers</div>
-            <div className="text-3xl font-bold text-gray-900 mt-2">
-              {scheduleData.workers.length}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-medium text-gray-500 mb-1">Total Workers</div>
+                <div className="text-3xl font-bold text-gray-900">
+                  {scheduleData.workers.length}
+                </div>
+              </div>
+              <Users className="h-8 w-8 text-blue-500" />
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="text-sm font-medium text-gray-500">Assigned Tasks</div>
-            <div className="text-3xl font-bold text-gray-900 mt-2">
-              {totalTasks}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-medium text-gray-500 mb-1">Assigned Tasks</div>
+                <div className="text-3xl font-bold text-gray-900">
+                  {totalTasks}
+                </div>
+              </div>
+              <Clock className="h-8 w-8 text-green-500" />
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="text-sm font-medium text-gray-500">Open Shifts</div>
-            <div className="text-3xl font-bold text-gray-900 mt-2">
-              {scheduleData.openShifts.length}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-medium text-gray-500 mb-1">Open Shifts</div>
+                <div className="text-3xl font-bold text-gray-900">
+                  {scheduleData.openShifts.length}
+                </div>
+              </div>
+              <Plus className="h-8 w-8 text-orange-500" />
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="text-sm font-medium text-gray-500">Utilization</div>
-            <div className="text-3xl font-bold text-gray-900 mt-2">
-              {utilization}%
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-medium text-gray-500 mb-1">Utilization</div>
+                <div className="text-3xl font-bold text-gray-900">
+                  {utilization}%
+                </div>
+              </div>
+              <BarChart3 className="h-8 w-8 text-purple-500" />
             </div>
           </div>
         </div>
 
         {/* Schedule Board Header */}
-        <div className="bg-white rounded-t-lg border border-gray-200 p-4 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Calendar className="h-5 w-5 text-blue-600" />
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">Schedule Board</h2>
-              <p className="text-sm text-gray-500">
-                {new Date(selectedDate).toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-              </p>
+        <div className="bg-white rounded-t-xl border border-gray-200 p-6 mb-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Calendar className="h-6 w-6 text-blue-600" />
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Daily Schedule</h2>
+                <p className="text-sm text-gray-500">
+                  {new Date(selectedDate).toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="text-sm text-gray-500">
-            Tasks Overview: {totalTasks}/15 Assigned
+            <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-full">
+              8:00 AM - 10:00 PM Schedule
+            </div>
           </div>
         </div>
 
-        {/* Schedule Board */}
-        <div className="border-x border-b border-gray-200 rounded-b-lg">
+        {/* Schedule Board - Extended timeline */}
+        <div className="border-x border-b border-gray-200 rounded-b-xl mb-8">
           <ScheduleBoard
             data={scheduleData}
             startHour={8}
-            endHour={17}
+            endHour={22} // Extended to 10 PM
             onScheduleUpdate={handleScheduleUpdate}
             onTaskClick={handleTaskClick}
+            onTaskMove={handleTaskMove}
           />
         </div>
 
@@ -519,34 +694,35 @@ const ScheduleBoardPage = () => {
           task={selectedTask}
           isOpen={isTaskModalOpen}
           onClose={() => setIsTaskModalOpen(false)}
+          onSave={handleTaskSave}
         />
 
         {/* Instructions */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
           <h3 className="text-lg font-semibold text-blue-900 mb-4">How to Use the Schedule Board</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
             <div className="flex items-start space-x-2">
               <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
               <div>
-                <span className="font-medium">Click Tasks:</span> Click on any task block to view detailed information and edit options.
+                <span className="font-medium">Drag & Drop:</span> Drag task blocks between workers to reassign them. Tasks can be moved to any worker or back to open shifts.
               </div>
             </div>
             <div className="flex items-start space-x-2">
               <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
               <div>
-                <span className="font-medium">Time Grid:</span> Tasks are positioned based on their start and end times across the timeline.
+                <span className="font-medium">Click to Edit:</span> Click on any task block to view and edit detailed information including time and priority.
               </div>
             </div>
             <div className="flex items-start space-x-2">
               <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
               <div>
-                <span className="font-medium">Open Shifts:</span> Unassigned tasks appear in the orange "Open" row for easy identification.
+                <span className="font-medium">Extended Hours:</span> Schedule now supports 8 AM to 10 PM timeline for full day coverage.
               </div>
             </div>
             <div className="flex items-start space-x-2">
               <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
               <div>
-                <span className="font-medium">Export Data:</span> Use the Export button to download schedule data as CSV for external use.
+                <span className="font-medium">Real-time Updates:</span> All changes are reflected immediately in the utilization statistics.
               </div>
             </div>
           </div>

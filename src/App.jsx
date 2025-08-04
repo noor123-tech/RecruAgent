@@ -15,7 +15,12 @@ import InternalCommunication from "./Pages/InternalCommunication";
 import PayrollManagement from "./Pages/PayrollManagement";
 import HRManagement from "./Pages/HRManagement";
 import AIRecruitment from "./Pages/AIRecruitment";
-
+import PrivacyPolicy from "./Pages/PrivacyPolicy";
+import TermsOfService from "./Pages/TermsofService";
+import CookiePolicy from "./Pages/CookiePolicy";
+import GDPRCompliance from "./Pages/GDPR";
+import AboutUs from "./Pages/AboutUs";
+import ContactUs from "./Pages/ContactUs";
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -49,8 +54,14 @@ function App() {
           <Route path="/internal-communication" element={<InternalCommunication />} />
           <Route path="/payroll" element={<PayrollManagement />} />
           <Route path="/hr" element={<HRManagement />} />
-          <Route path="/ai-recruitment" element={<AIRecruitment />} />
+                    <Route path="/contact" element={<ContactUs/>} />
 
+          <Route path="/ai-recruitment" element={<AIRecruitment />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfService />} />
+    <Route path="/cookies" element={<CookiePolicy />} />
+        <Route path="/GDPR" element={<GDPRCompliance />} />
+            <Route path="/about" element={<AboutUs />} />
           <Route path="/login" element={
             isLoggedIn ? (
               <Navigate to="/dashboard" replace />

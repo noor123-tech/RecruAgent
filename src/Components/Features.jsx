@@ -200,9 +200,12 @@ export default function Feature() {
             <button className="bg-white text-orange-600 font-bold py-3 px-8 rounded-lg hover:bg-gray-100 transition-colors shadow-md">
               See Live Demo
             </button>
-            <button className="bg-transparent border-2 border-white text-white font-bold py-3 px-8 rounded-lg hover:bg-white hover:bg-opacity-10 transition-colors">
-              Talk to Our Team
-            </button>
+         <button 
+  onClick="/contact" 
+  className="bg-transparent border-2 border-white text-white font-bold py-3 px-8 rounded-lg hover:bg-white hover:bg-opacity-10 hover:text-orange-500 transition-colors"
+>
+  Talk to Our Team
+</button>
           </div>
         </div>
       </div>

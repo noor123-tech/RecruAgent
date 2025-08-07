@@ -83,7 +83,7 @@ export default function FeatureSection() {
 
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-8 relative">
         {/* Accordion List */}
-        <div className="w-full md:w-1/2 relative">
+        <div className="w-full md:w-1/2 relative h-[500px] overflow-y-auto">
           <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
             {features.map((feature, i) => (
               <div
@@ -128,11 +128,11 @@ export default function FeatureSection() {
 
         {/* Image Panel */}
         <div className="w-full md:w-1/2 flex items-center justify-center">
-          <div className="w-full md:w-[90%] min-h-[420px] aspect-[16/9] rounded-2xl overflow-hidden shadow-xl border border-gray-200 transition-all duration-700 bg-white">
+          <div className="w-full h-[500px] rounded-2xl overflow-hidden shadow-xl border border-gray-200 transition-all duration-700 bg-white">
             <img
               src={features[activeIndex].image}
               alt={features[activeIndex].title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-center"
             />
           </div>
         </div>

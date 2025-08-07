@@ -15,51 +15,51 @@ import AI from "../assets/AIHRrecruitment.jpeg";
 
 const features = [
   {
-    title: "Employee Scheduling",
+    title: "Schedule Board",
     description: "Create perfect schedules in seconds with drag-and-drop ease and automatic shift assignments.",
-    icon: <Calendar size={20} />,
+    // icon: <Calendar size={20} />,
     image: ScheduleBoard
   },
   {
     title: "Time Tracking",
     description: "Effortless clock-ins using worker location and geofence.",
-    icon: <Clock size={20} />,
+    // icon: <Clock size={20} />,
     image: TimeTracking
   },
   {
     title: "Daily Operations",
     description: "Digitize your workflows with mobile checklists, job forms, and task tracking that workers actually use.",
-    icon: <Bolt size={20} />,
+    // icon: <Bolt size={20} />,
     image: Dailyoperation
   },
   {
     title: "Internal Communication",
     description: "Streamline team communication with priority-based routing and sentiment analysis.",
-    icon: <MessageSquare size={20} />,
+    // icon: <MessageSquare size={20} />,
     image: internalCommunications
   },
   {
     title: "Payroll",
     description: "Ensure tax compliance, generate payslips, and track costs accurately with automation.",
-    icon: <DollarSign size={20} />,
+    // icon: <DollarSign size={20} />,
     image: payrollentries
   },
   {
     title: "HR Management",
     description: "Manage onboarding, compliance, and employee data in one place.",
-    icon: <Users size={20} />,
+    // icon: <Users size={20} />,
     image: HRmanagement
   },
   {
     title: "AI-Powered Recruitment",
     description: "Smart hiring with automated sourcing, screening, and scoring.",
-    icon: <Zap size={20} />,
+    // icon: <Zap size={20} />,
     image: AI
   },
   {
     title: "Automated Workforce Scheduling",
     description: "AI-based shift optimization based on skills, laws, and availability.",
-    icon: <Settings size={20} />,
+    // icon: <Settings size={20} />,
     image: employeescheduling
   }
 ];
@@ -83,7 +83,7 @@ export default function FeatureSection() {
 
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-8 relative">
         {/* Accordion List */}
-        <div className="w-full md:w-1/2 relative h-[500px] overflow-y-auto">
+        <div className="w-full md:w-1/2 relative h-[500px] overflow-y-auto scrollbar-thin">
           <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
             {features.map((feature, i) => (
               <div
@@ -128,11 +128,11 @@ export default function FeatureSection() {
 
         {/* Image Panel */}
         <div className="w-full md:w-1/2 flex items-center justify-center">
-          <div className="w-full h-[500px] rounded-2xl overflow-hidden shadow-xl border border-gray-200 transition-all duration-700 bg-white">
+          <div className="w-full h-[500px] rounded-2xl overflow-hidden shadow-xl border border-gray-200 transition-all duration-700 bg-white flex items-center justify-center">
             <img
               src={features[activeIndex].image}
               alt={features[activeIndex].title}
-              className="w-full h-full object-cover object-center"
+              className="w-full h-full object-contain object-center"
             />
           </div>
         </div>
